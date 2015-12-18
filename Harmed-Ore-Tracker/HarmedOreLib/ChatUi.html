@@ -1,0 +1,157 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+
+<script>
+$(function() {
+  $("#pageTable").parent().height("100%");  // BODY
+  $("#pageTable").parent().parent().height("100%");  // HTML
+  $(document).height("100%");
+  pollChat();
+  });
+</script>
+
+<script>
+function onFailure(error) {
+  $("#errorDiv").css("visibility", "visible");
+  $("#errorMessage").html(error.message);
+}
+
+function onSuccess() {
+  hideError();
+}
+
+function hideError() {
+  $("#errorDiv").css("visibility", "hidden");
+  $("#errorMessage").html("");
+}
+
+function pollChat(chatIndex) {
+  interval = 1000;
+  setTimeout(function() {
+    google.script.run
+      .withSuccessHandler(processPoll)
+      .withFailureHandler(onFailure)
+      .getChat(chatIndex);
+  }, interval);
+}
+
+var chatVersion;
+
+function processPoll(chat) {
+  try {
+    if ( chatVersion == null ) {
+      chatVersion = chat.version;
+    } else if ( chatVersion != chat.version ) {
+      google.script.run
+      .withSuccessHandler(hideError)
+      .withFailureHandler(onFailure)
+      .showChat();
+    }
+  
+    updateChat(chat);
+    pollChat(chat.nextIndex);
+  } catch ( ex ) {
+    onFailure(ex);
+  }
+}
+
+function updateChat(chat) {
+  if ( chat.chat.length==0 && chat.nextIndex>1 )
+    return;
+/*  
+  var chatTable = $("#chatTable");
+  var oldRows = chatTable.children("tr");
+  oldRows.each(
+    function(index) {
+      var msgId = oldRows[index].id;
+      if ( msgId==null || msgId.substr(0,4)!="chat" )
+        return;
+      var msgIndex = parseInt(msgId.substr(4));
+      if ( msgIndex < chat.keepIndex )
+        $(oldRows[index]).css("background-color", "blue");
+    }
+  );
+*/
+  var chatDiv = $("#chatDiv");
+  var oldMessages = chatDiv.children("div");
+  oldMessages.each(
+    function(index) {
+      var msgId = oldMessages[index].id;
+      if ( msgId==null || msgId.substr(0,4)!="chat" )
+        return;
+      var msgIndex = parseInt(msgId.substr(4));
+      if ( msgIndex < chat.keepIndex )
+        $(oldMessages[index]).remove();
+    }
+  );
+  
+  var lastIndex;
+  for ( var i in chat.chat ) {
+    var msg = chat.chat[i];
+    /*
+    var newRow = '<tr id="chat' + msg[0] + '"><td>' + msg[2] + ": " + msg[3] + "</td></tr>";
+    chatTable.append(newRow);
+    */
+    lastIndex = msg[0];
+    var newMsg = '<div id="chat' + lastIndex + '"><b>' + msg[2] + "</b>: " + msg[3] + "</div>";
+    chatDiv.append(newMsg);
+  }
+  if ( lastIndex != null ) {
+    document.getElementById("chat"+lastIndex).scrollIntoView();
+  }
+  //alert(chatDiv.get().scrollHeight);
+  //chatDiv.get().scrollTop = chatDiv.get().scrollHeight;
+}
+
+function onKeyPress(e, form) {
+  if ( e.keyCode != 13 )
+    return true;
+  onSubmit(form);
+  return false;
+}
+
+function onSubmit(form) {
+  var report = form.report.value;
+  if ( report.trim() == "" )
+    return false;
+  form.report.value = "";
+  google.script.run
+  .withSuccessHandler(onSuccess)
+  .withFailureHandler(onFailure)
+  .sendReport(report);
+  return false;
+}
+</script>
+
+<style>
+body { margin: 0; }
+</style>
+<div id="errorDiv" style="color:red; position:absolute; left:0 right:0; visibility:hidden; background-color: yellow; width:100%">
+<div id="errorMessage" style="color:red;"></div>
+<br/>
+<input type="button" value="Reload"
+  onclick="google.script.run
+  .withSuccessHandler(hideError)
+  .withFailureHandler(onFailure)
+  .showChat()" />
+</div>
+
+<table id="pageTable" style="height: 100%; width: 100%;">
+<tr style="height: 100%;"><td>
+<div id="chatDiv" style="vertical-align: bottom; height: 100%; overflow: auto;">
+<div id="chat0">Loading...</div>
+<!--
+<table>
+<tbody id="chatTable">
+<tr id="chat0"><td id="chat">Loading...</td></tr>
+</tbody>
+</table>
+-->
+</div>
+</td></tr>
+<tr><td>
+<form onsubmit="return false;">
+<input name="report" type="text" width="16" id="report" autofocus autocomplete="off" onkeypress="onKeyPress(event, this.parentNode)" />
+<input type="button" value="Send" onclick="onSubmit(this.parentNode)" />
+</form>
+</td></tr>
+</table>

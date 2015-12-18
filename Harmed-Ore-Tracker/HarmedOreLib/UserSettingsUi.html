@@ -1,0 +1,38 @@
+<div id="errorMessage" style="color:red; background-color:yellow;"></div>
+<script>
+function onSuccess(msg) {
+  document.getElementById("okMessage").innerHTML = msg;
+  document.getElementById("errorMessage").innerHTML = "";
+  google.script.run
+    .withFailureHandler(onFailure)
+    .showChat()
+}
+
+function onFailure(error) {
+  document.getElementById("okMessage").innerHTML = "";
+  document.getElementById("errorMessage").innerHTML = error.message;
+}
+
+function onKeyPress(e, form) {
+  if ( e.keyCode != 13 )
+    return true;
+  onSubmit(form);
+  return false;
+}
+
+function onSubmit(o) {
+  google.script.run
+  .withSuccessHandler(onSuccess)
+  .withFailureHandler(onFailure)
+  .saveUserSettings(o);
+  return false;
+}
+</script>
+
+<form onsubmit="return false;"> 
+Please enter the name you would like to use in this spreadsheet (usually your RSN).<br/><br/>
+<input name="name" type="text" width="16" id="name" value="<?= nm==null?'':nm ?>" required
+  onkeypress="onKeyPress(event, this.parentNode)" />
+<input type="button" value="Save"  onclick="onSubmit(this.parentNode)" />
+</form>
+<div id="okMessage"></div>
