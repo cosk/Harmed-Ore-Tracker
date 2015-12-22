@@ -22,7 +22,7 @@ function getChat_(firstIndexToGet) {
   
   var rowOffet = nextIndex-nextRow+2;
   
-  var chatRange = chatSheet.getRange(2,1,Settings.chatRowsToKeep,4);
+  var chatRange = chatSheet.getRange(2,1,Settings.chatRowsToKeep,5);
   var chatTable = chatRange.getValues();
   
   for ( var i = firstIndexToGet ; i < nextIndex ; ++i ) {
@@ -31,7 +31,7 @@ function getChat_(firstIndexToGet) {
       row += Settings.chatRowsToKeep;
     var sheetRow = chatTable[row];
     // google.script.run does not support Date class
-    var outRow = [sheetRow[0], sheetRow[1].getTime(), htmlEscape(sheetRow[2]), htmlEscape(sheetRow[3])];
+    var outRow = [sheetRow[0], sheetRow[1].getTime(), htmlEscape(sheetRow[2]), htmlEscape(sheetRow[3]), htmlEscape(sheetRow[4])];
     chat.push(outRow);
   }
 

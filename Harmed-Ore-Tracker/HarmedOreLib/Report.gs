@@ -13,14 +13,24 @@ var ORE_STATUS = {
   DEAD   : "Mined"
 }
 
-function Report(world, ore, status) {
+function Report(world, ore, status, error) {
   this.world = world;
   this.ore = ore;
   this.status = status;
+  this.errorMsg = error;
   
   this.toString = function() {
-    return this.world + " " + this.ore + " " + this.status;
+    var s;
+    if ( this.errorMsg != null )
+      s = this.errorMsg;
+    else
+      s = this.world + " " + this.ore + " " + this.status;
+    return s;
   }
+}
+
+function reportError(world, error) {
+  return new Report(world, null, null, error);
 }
 
 //TODO: kill
@@ -39,7 +49,20 @@ function parseReport_(sReport) {
     var world = match[1];
     var ores = match[2];
     rest = match[3];
-    //TODO: Check world
+    var worldsSheet = Settings.getWorldsSheet();
+    if ( world > worldsSheet.getLastRow() ) {
+      reports.push(reportError(world, world+": world number is too large"));
+      continue;
+    }
+    var worldType = worldsSheet.getRange(world, 1, 1, 1).getValue();
+    if ( worldType==null || worldType.toUpperCase().indexOf("M")==-1 ) {
+      reports.push(reportError(world, world+" is not a members world"));
+      continue;
+    }
+    if ( worldType.toUpperCase()!="M" ) {
+      reports.push(reportError(world, world+" is a foreign world"));
+      continue;
+    }
     var report = parseWorldReport(world, ores);
     if ( report == null )
       break;
@@ -125,7 +148,8 @@ function parseWorldReport(world, ores) {
 }
 
 function processReport_(report, timestamp) {
-  //SpreadsheetApp.getActive().toast(report);
+  if ( report.errorMsg != null )
+    return;
   if ( report.ore==ORE.RUNE ) {
     if ( report.status==ORE_STATUS.UNH ) {
       removeFromCol_(Settings.runeColumn, report.world);

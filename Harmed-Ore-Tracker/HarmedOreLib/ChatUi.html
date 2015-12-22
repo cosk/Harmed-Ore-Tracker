@@ -12,7 +12,13 @@ $(function() {
 <script>
 function onFailure(error) {
   $("#errorDiv").css("visibility", "visible");
-  $("#errorMessage").html(error.message);
+  var msg;
+  if ( error.stack == null ) {
+    msg = error;
+  } else {
+    msg = error.stack.toString().substr(0,150);
+  }
+  $("#errorMessage").html(msg);
 }
 
 function onSuccess() {
@@ -25,7 +31,7 @@ function hideError() {
 }
 
 function pollChat(chatIndex) {
-  interval = 1000;
+  interval = 1000 + Math.random()*1000;
   setTimeout(function() {
     google.script.run
       .withSuccessHandler(processPoll)
@@ -38,16 +44,20 @@ var chatVersion;
 
 function processPoll(chat) {
   try {
-    if ( chatVersion == null ) {
-      chatVersion = chat.version;
-    } else if ( chatVersion != chat.version ) {
-      google.script.run
-      .withSuccessHandler(hideError)
-      .withFailureHandler(onFailure)
-      .showChat();
+    if ( chat.version != null ) {
+	    if ( chatVersion == null ) {
+	      chatVersion = chat.version;
+	    } else if ( chatVersion != chat.version ) {
+	      google.script.run
+	      .withSuccessHandler(hideError)
+	      .withFailureHandler(onFailure)
+	      .showChat();
+	    }
+      updateChat(chat);
+    } else {
+      // Cache hit, no change in chat;
     }
-  
-    updateChat(chat);
+    
     pollChat(chat.nextIndex);
   } catch ( ex ) {
     onFailure(ex);
@@ -57,20 +67,7 @@ function processPoll(chat) {
 function updateChat(chat) {
   if ( chat.chat.length==0 && chat.nextIndex>1 )
     return;
-/*  
-  var chatTable = $("#chatTable");
-  var oldRows = chatTable.children("tr");
-  oldRows.each(
-    function(index) {
-      var msgId = oldRows[index].id;
-      if ( msgId==null || msgId.substr(0,4)!="chat" )
-        return;
-      var msgIndex = parseInt(msgId.substr(4));
-      if ( msgIndex < chat.keepIndex )
-        $(oldRows[index]).css("background-color", "blue");
-    }
-  );
-*/
+
   var chatDiv = $("#chatDiv");
   var oldMessages = chatDiv.children("div");
   oldMessages.each(
@@ -87,12 +84,12 @@ function updateChat(chat) {
   var lastIndex;
   for ( var i in chat.chat ) {
     var msg = chat.chat[i];
-    /*
-    var newRow = '<tr id="chat' + msg[0] + '"><td>' + msg[2] + ": " + msg[3] + "</td></tr>";
-    chatTable.append(newRow);
-    */
     lastIndex = msg[0];
-    var newMsg = '<div id="chat' + lastIndex + '"><b>' + msg[2] + "</b>: " + msg[3] + "</div>";
+    var newMsg = '<div id="chat' + lastIndex + '"><b>' + msg[2] + "</b>: " + msg[3];
+    if ( msg[4]!=null && msg[4]!="" ) {
+      newMsg += "<br/><b>" + msg[4].replace(/\n/g, "<br/>") + "</b>";
+    }
+    newMsg += "</div>";
     chatDiv.append(newMsg);
   }
   if ( lastIndex != null ) {

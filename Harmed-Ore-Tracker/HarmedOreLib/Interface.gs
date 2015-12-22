@@ -38,8 +38,13 @@ function showSettings(){
 }
 
 function getChat(firstIndexToGet) {
+  var cachedNextIndex=CacheService.getDocumentCache().get("chatIndex");
+  if ( firstIndexToGet!=null && cachedNextIndex==firstIndexToGet )
+    return  {nextIndex:cachedNextIndex};
   enterCriticalSection();
+//  SpreadsheetApp.getActive().toast(cachedNextIndex);
   var chat = getChat_(firstIndexToGet);
+  cacheChatIndex(chat.nextIndex);
   exitCriticalSection();
   return chat;
 }
@@ -50,7 +55,6 @@ function getChat(firstIndexToGet) {
  */
 function saveUserSettings(f) {
   var name = f.name.trim();
-//  SpreadsheetApp.getActive().toast(name);
   if ( name == "" )
     throw "Name cannot be empty";
   UserSettings.setName(name);
@@ -78,8 +82,14 @@ function sendReport(sReport) {
   //enterCriticalSection();
   var timestamp = new Date();
 
+  var error = "";
   if ( reports != null ) {
     for ( var i in reports ) {
+      if ( reports[i].errorMsg != null ) {
+        if ( error != "" )
+          error += "\n";
+        error += reports[i].errorMsg;
+      }
       processReport_(reports[i], timestamp);
     }
   }
@@ -89,12 +99,17 @@ function sendReport(sReport) {
   var nextRow = nextRowCell.getValue();
   var nextIndexCell = chatSheet.getRange(1,4,1,1);
   var nextIndex = nextIndexCell.getValue();
-  var nextRowRange = chatSheet.getRange(nextRow,1,1,4);
-  nextRowRange.setValues([[nextIndex, timestamp, UserSettings.getName(), sReport]]);
+  var nextRowRange = chatSheet.getRange(nextRow,1,1,5);
+  nextRowRange.setValues([[nextIndex, timestamp, UserSettings.getName(), sReport, error]]);
   nextRow = (nextRow-1)%Settings.chatRowsToKeep+2;
   nextRowCell.setValue(nextRow);
   nextIndexCell.setValue(++nextIndex);
+  cacheChatIndex(nextIndex);
   exitCriticalSection();
+}
+
+function cacheChatIndex(nextIndex){
+  CacheService.getDocumentCache().put("chatIndex", nextIndex, 60*10);
 }
 
 /** Remove old reports, called from a time-driven trigger */

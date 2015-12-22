@@ -11,6 +11,10 @@ var Settings = {
     return SpreadsheetApp.getActive().getSheetByName("Chat");
   },
   
+  getWorldsSheet: function() {
+    return SpreadsheetApp.getActive().getSheetByName("Worlds");
+  },
+  
   getIntroSheet: function() {
     return SpreadsheetApp.getActive().getSheetByName("Intro");
   },
@@ -21,7 +25,7 @@ var Settings = {
   chatRowsToKeep: 150,
   /** Number of chat entries to show in ChatUi.html */
   chatRowsToShow: 100,
-  
+    
   minutesToKeepHarmedWorlds: 10,
   minutesToKeepRuneWorlds: 55,
   minutesToKeepUnhWorlds: 55,
