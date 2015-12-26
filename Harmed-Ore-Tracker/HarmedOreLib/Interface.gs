@@ -115,10 +115,11 @@ function cacheChatIndex(nextIndex){
 /** Remove old reports, called from a time-driven trigger */
 function cleanupOldWorlds() {
   //enterCriticalSection();
-  cleanupOldWorldFromCol_(Settings.runeColumn, Settings.minutesToKeepRuneWorlds);
-  cleanupOldWorldFromCol_(Settings.addyColumn, Settings.minutesToKeepHarmedWorlds);
-  cleanupOldWorldFromCol_(Settings.mithColumn, Settings.minutesToKeepHarmedWorlds);
-  cleanupOldWorldFromCol_(Settings.coalColumn, Settings.minutesToKeepHarmedWorlds);
-  cleanupOldWorldFromCol_(Settings.unhColumn, Settings.minutesToKeepUnhWorlds);
+  cleanupOldWorlds_();
+//  cleanupOldWorldFromCol_(Settings.runeColumnOld, Settings.minutesToKeepRuneWorlds);
+//  cleanupOldWorldFromCol_(Settings.addyColumnOld, Settings.minutesToKeepHarmedWorlds);
+//  cleanupOldWorldFromCol_(Settings.mithColumnOld, Settings.minutesToKeepHarmedWorlds);
+//  cleanupOldWorldFromCol_(Settings.coalColumnOld, Settings.minutesToKeepHarmedWorlds);
+//  cleanupOldWorldFromCol_(Settings.unhColumnOld, Settings.minutesToKeepUnhWorlds);
   //exitCriticalSection();
 }

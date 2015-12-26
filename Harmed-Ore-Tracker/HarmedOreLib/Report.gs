@@ -150,26 +150,64 @@ function parseWorldReport(world, ores) {
 function processReport_(report, timestamp) {
   if ( report.errorMsg != null )
     return;
+  
+  var worldsSheet = Settings.getWorldsSheet();
+  var world = report.world;
+  var worldRange = worldsSheet.getRange(world, 2, 1, 11);
+  var worldRow = worldRange.getValues()[0];
+  var oreCell = getOreCell_(report.ore);
+  if ( report.ore==ORE.RUNE ) {
+    var unhCell = Settings.unhColumn - 2;
+    if ( report.status==ORE_STATUS.UNH ) {
+      clearOre_(worldRow, oreCell);
+      recordOre_(worldRow, unhCell, world, timestamp);
+    } else if ( report.status==ORE_STATUS.HARMED ) {
+      clearOre_(worldRow, unhCell);
+      recordOre_(worldRow, oreCell, world, timestamp);
+    } else {
+      clearOre_(worldRow, oreCell);
+      clearOre_(worldRow, unhCell);
+    }
+  } else {
+    if ( report.status == ORE_STATUS.HARMED ) {
+      recordOre_(worldRow, oreCell, world, timestamp);
+    } else {
+      clearOre_(worldRow, oreCell);
+    }
+  }
+  worldRange.setValues([worldRow]);
+  
+  
+  //OLD
   if ( report.ore==ORE.RUNE ) {
     if ( report.status==ORE_STATUS.UNH ) {
-      removeFromCol_(Settings.runeColumn, report.world);
-      addToCol_(Settings.unhColumn, report.world, timestamp);
+      removeFromCol_(Settings.runeColumnOld, world);
+      addToCol_(Settings.unhColumnOld, world, timestamp);
     } else if ( report.status==ORE_STATUS.HARMED ) {
-      removeFromCol_(Settings.unhColumn, report.world);
-      addToCol_(Settings.runeColumn, report.world, timestamp);
+      removeFromCol_(Settings.unhColumnOld, world);
+      addToCol_(Settings.runeColumnOld, world, timestamp);
     } else {
-      removeFromCol_(Settings.unhColumn, report.world);
-      removeFromCol_(Settings.runeColumn, report.world);
+      removeFromCol_(Settings.unhColumnOld, world);
+      removeFromCol_(Settings.runeColumnOld, world);
     }
     return;
   }
   var col = getOreColumn_(report.ore);
   
   if ( report.status == ORE_STATUS.HARMED ) {
-    addToCol_(col, report.world, timestamp);
+    addToCol_(col, world, timestamp);
   } else {
-    removeFromCol_(col, report.world);
+    removeFromCol_(col, world);
   }
+}
+
+function clearOre_(row, index) {
+  row[index] = row[index+1] = "";
+}
+
+function recordOre_(row, index, world, timestamp) {
+  row[index] = world;
+  row[index+1] = timestamp;
 }
 
 function addToCol_(col, world, timestamp) {
@@ -240,19 +278,39 @@ function fillValues_(values, startFrom) {
   return true;
 }
 
+function getOreCell_(ore) {
+  var rangeOffset = 2;
+  switch ( ore ) {
+  case ORE.RUNE:
+    return Settings.runeColumn-rangeOffset;
+    break;
+  case ORE.ADDY:
+    return Settings.addyColumn-rangeOffset;
+    break;
+  case ORE.MITH:
+    return Settings.mithColumn-rangeOffset;
+    break;
+  case ORE.COAL:
+    return Settings.coalColumn-rangeOffset;
+    break;
+  default:
+    throw "Unknown ore " + ore;
+  }
+}
+
 function getOreColumn_(ore) {
   switch ( ore ) {
   case ORE.RUNE:
-    return Settings.runeColumn;
+    return Settings.runeColumnOld;
     break;
   case ORE.ADDY:
-    return Settings.addyColumn;
+    return Settings.addyColumnOld;
     break;
   case ORE.MITH:
-    return Settings.mithColumn;
+    return Settings.mithColumnOld;
     break;
   case ORE.COAL:
-    return Settings.coalColumn;
+    return Settings.coalColumnOld;
     break;
   default:
     throw "Unknown ore " + ore;

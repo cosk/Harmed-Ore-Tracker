@@ -30,9 +30,15 @@ var Settings = {
   minutesToKeepRuneWorlds: 55,
   minutesToKeepUnhWorlds: 55,
   
-  runeColumn: 1,
-  addyColumn: 3,
-  mithColumn: 5,
-  coalColumn: 7,
-  unhColumn: 9,
+  runeColumn: 2,
+  addyColumn: 6,
+  mithColumn: 8,
+  coalColumn: 10,
+  unhColumn: 4,
+  
+  runeColumnOld: 1,
+  addyColumnOld: 3,
+  mithColumnOld: 5,
+  coalColumnOld: 7,
+  unhColumnOld: 9,
 }
