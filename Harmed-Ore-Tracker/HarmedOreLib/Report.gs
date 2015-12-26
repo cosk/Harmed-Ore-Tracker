@@ -176,29 +176,6 @@ function processReport_(report, timestamp) {
     }
   }
   worldRange.setValues([worldRow]);
-  
-  
-  //OLD
-  if ( report.ore==ORE.RUNE ) {
-    if ( report.status==ORE_STATUS.UNH ) {
-      removeFromCol_(Settings.runeColumnOld, world);
-      addToCol_(Settings.unhColumnOld, world, timestamp);
-    } else if ( report.status==ORE_STATUS.HARMED ) {
-      removeFromCol_(Settings.unhColumnOld, world);
-      addToCol_(Settings.runeColumnOld, world, timestamp);
-    } else {
-      removeFromCol_(Settings.unhColumnOld, world);
-      removeFromCol_(Settings.runeColumnOld, world);
-    }
-    return;
-  }
-  var col = getOreColumn_(report.ore);
-  
-  if ( report.status == ORE_STATUS.HARMED ) {
-    addToCol_(col, world, timestamp);
-  } else {
-    removeFromCol_(col, world);
-  }
 }
 
 function clearOre_(row, index) {
@@ -208,74 +185,6 @@ function clearOre_(row, index) {
 function recordOre_(row, index, world, timestamp) {
   row[index] = world;
   row[index+1] = timestamp;
-}
-
-function addToCol_(col, world, timestamp) {
-  var range = getOreRange_(col, 1);
-  var values = range.getValues();
-  removeFromRangeValues_(values, world);
-  var newRow = [world, timestamp];
-  values.splice(0, 0, newRow);
-  values.pop();
-  range.setValues(values);
-}
-
-function removeFromCol_(col, world) {
-  var range = getOreRange_(col, 0);
-  var values = range.getValues();
-  var removed = removeFromRangeValues_(values, world);
-  if ( removed )
-    range.setValues(values);
-}
-
-function removeFromRangeValues_(values, world) {
-  if ( values==null || values.length==0 )
-    return false;
-  var j = 0;
-  for ( var i in values ) {
-    if ( values[i][0] == world )
-      continue;
-    if ( i != j )
-      values[j] = values[i];
-    ++j;
-  }
-
-  return fillValues_(values, j);
-}
-
-function cleanupOldWorldFromCol_(col, minutes) {
-  var range = getOreRange_(col, 0);
-  var values = range.getValues();
-  if ( cleanupOldWorldsFromValues_(values, minutes) )
-    range.setValues(values);
-}
-
-function cleanupOldWorldsFromValues_(values, minutes) {
-  var now = new Date().getTime();
-  var expiration = now - minutes*60*1000;
-  if ( values==null || values.length==0 )
-    return false;
-  var j = 0;
-  for ( var i in values ) {
-    var timestamp = values[i][1];
-    if ( timestamp!="" && timestamp.getTime()<expiration )
-      continue;
-    if ( i != j )
-      values[j] = values[i];
-    ++j;
-  }
-  return fillValues_(values, j);
-}
-
-function fillValues_(values, startFrom) {
-  if ( values==null || startFrom>=values.length )
-    return false;
-  var filler = [];
-  for ( var i = 0 ; i < values[0].length ; ++i )
-    filler.push("");
-  for ( var i = startFrom ; i < values.length ; ++i )
-    values[i] = filler;
-  return true;
 }
 
 function getOreCell_(ore) {
@@ -296,32 +205,4 @@ function getOreCell_(ore) {
   default:
     throw "Unknown ore " + ore;
   }
-}
-
-function getOreColumn_(ore) {
-  switch ( ore ) {
-  case ORE.RUNE:
-    return Settings.runeColumnOld;
-    break;
-  case ORE.ADDY:
-    return Settings.addyColumnOld;
-    break;
-  case ORE.MITH:
-    return Settings.mithColumnOld;
-    break;
-  case ORE.COAL:
-    return Settings.coalColumnOld;
-    break;
-  default:
-    throw "Unknown ore " + ore;
-  }
-  return col;
-}
-
-function getOreRange_(col, extraRows) {
-  var hoSheet = Settings.getMutableHoSheet();
-  var startRow = 1;
-  var rowCount = Math.max(hoSheet.getLastRow()-startRow+1+extraRows, 1);
-  //SpreadsheetApp.getActive().toast("getOreRange: " + rowCount);
-  return hoSheet.getRange(startRow, col, rowCount, 2);
 }

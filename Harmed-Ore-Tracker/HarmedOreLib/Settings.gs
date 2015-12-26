@@ -2,10 +2,6 @@ var Settings = {
   getHoSheet: function() {
     return SpreadsheetApp.getActive().getSheetByName("Harmed Ores");
   },
-  
-  getMutableHoSheet: function() {
-    return SpreadsheetApp.getActive().getSheetByName("HO Mutable");
-  },
 
   getChatSheet: function() {
     return SpreadsheetApp.getActive().getSheetByName("Chat");
@@ -35,10 +31,4 @@ var Settings = {
   mithColumn: 8,
   coalColumn: 10,
   unhColumn: 4,
-  
-  runeColumnOld: 1,
-  addyColumnOld: 3,
-  mithColumnOld: 5,
-  coalColumnOld: 7,
-  unhColumnOld: 9,
 }

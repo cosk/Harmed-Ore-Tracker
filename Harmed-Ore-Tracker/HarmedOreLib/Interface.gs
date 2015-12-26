@@ -116,10 +116,5 @@ function cacheChatIndex(nextIndex){
 function cleanupOldWorlds() {
   //enterCriticalSection();
   cleanupOldWorlds_();
-//  cleanupOldWorldFromCol_(Settings.runeColumnOld, Settings.minutesToKeepRuneWorlds);
-//  cleanupOldWorldFromCol_(Settings.addyColumnOld, Settings.minutesToKeepHarmedWorlds);
-//  cleanupOldWorldFromCol_(Settings.mithColumnOld, Settings.minutesToKeepHarmedWorlds);
-//  cleanupOldWorldFromCol_(Settings.coalColumnOld, Settings.minutesToKeepHarmedWorlds);
-//  cleanupOldWorldFromCol_(Settings.unhColumnOld, Settings.minutesToKeepUnhWorlds);
   //exitCriticalSection();
 }

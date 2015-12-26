@@ -10,15 +10,52 @@ $(function() {
 </script>
 
 <script>
-function onFailure(error) {
-  $("#errorDiv").css("visibility", "visible");
-  var msg;
-  if ( error.stack == null ) {
-    msg = error;
+/** Polling halted */
+function onPollFailure(error, chatIndex) {
+  var msg = formatError(error);
+  if ( isNetworkError(error) ) {
+    $("#networkErrorDiv").css("visibility", "visible");
+    retryPoll(error, {chatIndex:chatIndex, retryCount:0});
   } else {
-    msg = error.stack.toString().substr(0,150);
+    onFailure(error);
   }
+}
+
+function retryPoll(error, retryData) {
+  var retryCount = ++retryData.retryCount;
+  $("#retryCount").html(retryCount);
+  if ( !isNetworkError(error) || retryCount>=5 ) {
+    onFailure(error, retryData.chatIndex);
+    return;
+  }
+  // Exponential retry - 1s, 2s, 4s
+  var interval = retryCount>4 ? 10 : Math.pow(2, retryCount-1)*1000 + Math.random()*1000;
+  setTimeout(function() {
+    google.script.run
+     .withUserObject(retryData)
+     .withSuccessHandler(processPoll)
+     .withFailureHandler(retryPoll)
+     .getChat(retryData.chatIndex);
+  }, interval);
+}
+
+function isNetworkError(error) {
+  return formatError(error).startsWith("NetworkError: Connection failure")
+}
+
+function onFailure(error) {
+  var msg = formatError(error);
+  $("#networkErrorDiv").css("visibility", "hidden");
+  $("#errorDiv").css("visibility", "visible");
   $("#errorMessage").html(msg);
+}
+
+function formatError(error) {
+  if ( error.stack == null ) {
+    return error.toString();
+  } else {
+    return error.stack.toString().substr(0,150);
+  }
 }
 
 function onSuccess() {
@@ -28,40 +65,46 @@ function onSuccess() {
 function hideError() {
   $("#errorDiv").css("visibility", "hidden");
   $("#errorMessage").html("");
+  $("#networkErrorDiv").css("visibility", "hidden");
 }
 
-function pollChat(chatIndex) {
-  interval = 1000 + Math.random()*1000;
+/** Schedule next chat update */
+function pollChat(chatIndex, interval) {
+  var interval = 1000 + Math.random()*1000;
   setTimeout(function() {
     google.script.run
+      .withUserObject(chatIndex)
       .withSuccessHandler(processPoll)
-      .withFailureHandler(onFailure)
+      .withFailureHandler(onPollFailure)
       .getChat(chatIndex);
   }, interval);
 }
 
 var chatVersion;
 
+/** Display chat updates received from the server and schedule next poll */
 function processPoll(chat) {
   try {
+    $("#networkErrorDiv").css("visibility", "hidden");
     if ( chat.version != null ) {
 	    if ( chatVersion == null ) {
 	      chatVersion = chat.version;
 	    } else if ( chatVersion != chat.version ) {
 	      google.script.run
-	      .withSuccessHandler(hideError)
-	      .withFailureHandler(onFailure)
-	      .showChat();
+	        .withUserObject(chat.nextIndex)
+		      .withSuccessHandler(hideError)
+		      .withFailureHandler(onPollFailure)
+		      .showChat();
 	    }
       updateChat(chat);
     } else {
-      // Cache hit, no change in chat;
+      // Cache hit, no change in chat (this is a hack - missing chat.version indicates that chat did not change)
     }
-    
-    pollChat(chat.nextIndex);
   } catch ( ex ) {
     onFailure(ex);
   }
+    
+  pollChat(chat.nextIndex);
 }
 
 function updateChat(chat) {
@@ -122,6 +165,10 @@ function onSubmit(form) {
 <style>
 body { margin: 0; }
 </style>
+<div id="networkErrorDiv" style="color:red; position:absolute; left:0 right:0; visibility:hidden; background-color: yellow; width:100%">
+Connection error. Retrying: <span id="retryCount">1</span> of 5.
+</div>
+
 <div id="errorDiv" style="color:red; position:absolute; left:0 right:0; visibility:hidden; background-color: yellow; width:100%">
 <div id="errorMessage" style="color:red;"></div>
 <br/>
