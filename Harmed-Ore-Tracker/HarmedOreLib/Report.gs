@@ -10,7 +10,8 @@ var ORE = {
 var ORE_STATUS = {
   HARMED : "Harmonised",
   UNH    : "Unharmed",
-  DEAD   : "Mined"
+  DEAD   : "Mined",
+  CALLED : "Called"
 }
 
 function Report(world, ore, status, error) {
@@ -75,16 +76,30 @@ function parseReport_(sReport) {
 function parseWorldReport(world, ores) {
   var report = [];
   
-  if ( ores.match(/^clear$/i) ) {
+  if ( ores.match(/^cl(ear|r|e|ea)$/i) ) {
     for ( var i in ORE.all() ) {
       report.push(new Report(world, ORE.all()[i], ORE_STATUS.DEAD));
     }
     return report;
   }
   
-  if ( ores.match(/^all$/i) ) {
+  if ( ores.match(/^al(l?)$/i) ) {
     for ( var i in ORE.all() ) {
       report.push(new Report(world, ORE.all()[i], ORE_STATUS.HARMED));
+    }
+    return report;
+  }
+  
+  if ( ores.match(/^(r|rune|runite)?call(ed)?$/i) ) {
+    for ( var i in ORE.all() ) {
+      report.push(new Report(world, ORE.RUNE, ORE_STATUS.CALLED));
+    }
+    return report;
+  }
+  
+  if ( ores.match(/^(r|rune|runite)?(confirmed|conf|cnf|confirm)?$/i) ) {
+    for ( var i in ORE.all() ) {
+      report.push(new Report(world, ORE.RUNE, ORE_STATUS.HARMED));
     }
     return report;
   }
@@ -164,15 +179,26 @@ function processReport_(report, timestamp) {
     } else if ( report.status==ORE_STATUS.HARMED ) {
       clearOre_(worldRow, unhCell);
       recordOre_(worldRow, oreCell, world, timestamp);
-    } else {
+    } else if ( report.status==ORE_STATUS.DEAD ) {
       clearOre_(worldRow, oreCell);
       clearOre_(worldRow, unhCell);
+    } else if ( report.status==ORE_STATUS.CALLED ) {
+      if ( Math.abs(worldRow[oreCell]) == world ) {
+        // Already called or confirmed, do nothing
+      } else {
+        clearOre_(worldRow, unhCell);
+        recordOre_(worldRow, oreCell, -world, timestamp);
+      }
+    } else {
+      throw "Internal error: unknown rune ore status " + report.status;
     }
   } else {
     if ( report.status == ORE_STATUS.HARMED ) {
       recordOre_(worldRow, oreCell, world, timestamp);
-    } else {
+    } else if ( report.status==ORE_STATUS.DEAD ) {
       clearOre_(worldRow, oreCell);
+    } else {
+      throw "Internal error: unknown ore status " + report.status;
     }
   }
   worldRange.setValues([worldRow]);

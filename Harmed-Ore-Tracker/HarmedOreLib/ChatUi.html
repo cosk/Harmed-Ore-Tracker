@@ -54,7 +54,7 @@ function formatError(error) {
   if ( error.stack == null ) {
     return error.toString();
   } else {
-    return error.stack.toString().substr(0,150);
+    return error.stack.toString().substr(0,200);
   }
 }
 

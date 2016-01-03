@@ -11,7 +11,13 @@ function enterCriticalSection() {
   if ( docLock == null )
     return false;
   DocumentLock = docLock;
-  var gotLock = docLock.tryLock(20000);
+  var gotLock;
+  try {
+    gotLock = docLock.tryLock(5000);
+  } catch ( ex ) {
+    Logger.log("Error obtaining lock " + ex);
+    return false;
+  }
   return gotLock;
 }
 
@@ -19,7 +25,11 @@ function exitCriticalSection() {
   var docLock = DocumentLock;
   if ( docLock == null )
     return;
-  docLock.releaseLock();
+  try {
+    docLock.releaseLock();
+  } catch ( ex ) {
+    Logger.log("Error releasing lock " + ex);
+  }
 }
 
 function isInCriticalSection() {

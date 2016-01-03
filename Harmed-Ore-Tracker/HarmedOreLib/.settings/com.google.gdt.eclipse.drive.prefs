@@ -30,5 +30,5 @@ driveScriptType.TODO.gs=server_js
 driveScriptType.UserSettings.gs=server_js
 driveScriptType.UserSettingsUi.html=html
 driveScriptType.Utilities.gs=server_js
-driveVersionFingerprint=a83ba392a6aacde10f4387a952d599e6
+driveVersionFingerprint=a293005fc65f27b4fa36bee24ea7dd0b
 eclipse.preferences.version=1

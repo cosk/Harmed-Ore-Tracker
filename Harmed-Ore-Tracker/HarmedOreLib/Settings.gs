@@ -31,4 +31,6 @@ var Settings = {
   mithColumn: 8,
   coalColumn: 10,
   unhColumn: 4,
+  
+  worldColumns: 10,
 }

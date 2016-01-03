@@ -12,7 +12,7 @@ function cleanupOldWorlds_() {
   var worldsSheet = Settings.getWorldsSheet();
   for ( var i in expiredWorlds ) {
     var world = expiredWorlds[i];
-    var worldRange = worldsSheet.getRange(world,2,1,worldsSheet.getLastColumn()-1);
+    var worldRange = worldsSheet.getRange(world,2,1,Settings.worldColumns);
     var worldRow = worldRange.getValues()[0];
     var expiredCells = getExpiredCells_(worldRow, cellExpirations);
     if ( expiredCells.length > 0 ) {
@@ -27,7 +27,7 @@ function cleanupOldWorlds_() {
 
 function getExpiredWorlds_(cellExpirations) {
   var worldsSheet = Settings.getWorldsSheet();
-  var worlds = worldsSheet.getRange(1,2,worldsSheet.getLastRow(),worldsSheet.getLastColumn()-1).getValues();
+  var worlds = worldsSheet.getRange(1,2,worldsSheet.getLastRow(),Settings.worldColumns).getValues();
   var expiredWorlds = [];
   for ( var world in worlds ) {
     if ( getExpiredCells_(worlds[world], cellExpirations).length != 0 )
